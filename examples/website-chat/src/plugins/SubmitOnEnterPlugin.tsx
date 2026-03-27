@@ -12,7 +12,9 @@ import {
   $createTextNode,
   $getRoot,
   $isParagraphNode,
+  CLEAR_EDITOR_COMMAND,
   COMMAND_PRIORITY_LOW,
+  EditorState,
   KEY_ENTER_COMMAND,
   LexicalEditor,
 } from 'lexical';
@@ -32,7 +34,7 @@ export function clearEditor(editor: LexicalEditor) {
 }
 
 interface SubmitOnEnterPluginProps {
-  onSubmit: (content: string) => void;
+  onSubmit: (editorState: EditorState) => void;
 }
 
 export function SubmitOnEnterPlugin({onSubmit}: SubmitOnEnterPluginProps) {
@@ -48,12 +50,12 @@ export function SubmitOnEnterPlugin({onSubmit}: SubmitOnEnterPluginProps) {
         if (event !== null) {
           event.preventDefault();
         }
-        const content = editor
+        const hasContent = editor
           .getEditorState()
-          .read(() => $getRoot().getTextContent().trim());
-        if (content) {
-          onSubmit(content);
-          clearEditor(editor);
+          .read(() => $getRoot().getTextContent().trim() !== '');
+        if (hasContent) {
+          onSubmit(editor.getEditorState());
+          editor.dispatchCommand(CLEAR_EDITOR_COMMAND, undefined);
         }
         return true;
       },
